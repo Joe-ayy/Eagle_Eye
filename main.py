@@ -30,10 +30,10 @@ def main():
         app.set_key_bindings()
 
         # Draw the map and load in relevant data - NOTE: The map needed to be saved so they aren't garbage collected
-        map_image = app.draw_map(c.cleanup_directory)
+        app.draw_map(c.cleanup_directory)
 
         # Load the initial images that are able to be updated once mainloop start
-        img1, img2, img3 = app.update_images()
+        app.update_images()
 
         # Run the application
         app.app_window.mainloop()

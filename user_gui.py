@@ -1,6 +1,4 @@
-import time
 import cv2
-import os
 from tkinter import *
 import PIL.Image
 import PIL.ImageTk
@@ -30,6 +28,7 @@ class MainPage:
     #endregion
 
     # Hold on to the values for the images so they are not garbage collected
+    map_image = None
     store_image_1 = None
     store_image_2 = None
     store_image_3 = None
@@ -60,6 +59,9 @@ class MainPage:
         self.img3_canvas = BuildCanvas(self.img3_con, MainPage.img_w, MainPage.img_h, NW, "Green")  # Image 3 Canvas
         #endregion
 
+        # Set the focus to the map canvas for keybindings
+        self.map_canvas.focus_set()
+
     def draw_map(self, path):
         # Get the map's path
         map_path = fih.get_map_path(path)
@@ -77,7 +79,7 @@ class MainPage:
         new_map = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(resize_map))
         self.map_canvas.create_image(int(c.width * .67) / 2, int(self.map_h) / 2, image=new_map)
 
-        return new_map
+        self.map_image = new_map
 
     def update_images(self):
         # Delete the old images
@@ -89,7 +91,7 @@ class MainPage:
         print("timestamp: ", c.timestamp)
 
         # Load and draw the new images to the gui
-        return self.load_and_draw_images(c.cleanup_directory)
+        self.load_and_draw_images(c.cleanup_directory)
 
     def load_and_draw_images(self, path):
         # Load the images
@@ -123,8 +125,6 @@ class MainPage:
         self.store_image_2 = new_img2
         self.store_image_3 = new_img3
 
-        return new_img1, new_img2, new_img3
-
     #region ### Mouse and keyboard operations ###
 
     def mouse_click(self, event):
@@ -132,35 +132,35 @@ class MainPage:
         timestamp_ops.find_timestamp(event.x, event.y)
 
         # Update the images
-        new_img1, new_img2, new_img3 = self.update_images()
+        self.update_images()
 
     def arrow_left(self, event):
         # Update the timestamp
         c.timestamp = c.timestamp - 1
 
         # Update the images
-        new_img1, new_img2, new_img3 = self.update_images()
+        self.update_images()
 
     def arrow_right(self, event):
         # Update the timestamp
         c.timestamp = c.timestamp + 1
 
         # Update the images
-        new_img1, new_img2, new_img3 = self.update_images()
+        self.update_images()
 
     def arrow_up(self, event):
         # Update the timestamp
         c.timestamp = c.timestamp + 10
 
         # Update the images
-        new_img1, new_img2, new_img3 = self.update_images()
+        self.update_images()
 
     def arrow_down(self, event):
         # Update the timestamp
         c.timestamp = c.timestamp - 10
 
         # Update the images
-        new_img1, new_img2, new_img3 = self.update_images()
+        self.update_images()
 
     #endregion
 
