@@ -15,6 +15,9 @@ def main():
     c.cleanup_directory = askdirectory()
 
     if c.cleanup_directory != '':
+        # Delete any images if they are there, if they aren't, this won't hurt anything
+        delete_images(c.cleanup_directory)
+
         # Load in the necessary files to set config values
         get_offsets(c.cleanup_directory)
         fih.get_trajectory_path(c.cleanup_directory)
@@ -26,11 +29,11 @@ def main():
         app.set_button_bindings()
         app.set_key_bindings()
 
-        # Draw the map and load in relevant data
-        app.draw_map(c.cleanup_directory)
+        # Draw the map and load in relevant data - NOTE: The map needed to be saved so they aren't garbage collected
+        map_image = app.draw_map(c.cleanup_directory)
 
         # Load the initial images that are able to be updated once mainloop start
-        app.update_images()
+        img1, img2, img3 = app.update_images()
 
         # Run the application
         app.app_window.mainloop()

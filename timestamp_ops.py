@@ -64,9 +64,6 @@ def find_timestamp(x, y):
     map_x_y_meters[0] = map_x_y_meters[0] - config.x_offset * config.p2m
     map_x_y_meters[1] = map_x_y_meters[1] - config.y_offset * config.p2m
 
-    print("X offset (Pixels): ", config.x_offset, "X offset (Meters): ", config.x_offset * config.p2m)
-    print("Y offset (Pixels): ", config.y_offset, "Y offset (Meters): ", config.y_offset * config.p2m)
-
     # Open the file
     file = open(config.traj_file, 'r')
 
@@ -98,4 +95,4 @@ def find_timestamp(x, y):
     file.close()
 
     # Temporary fix, just return 1 as the timestamp
-    return 1
+    return -1

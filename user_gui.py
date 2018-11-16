@@ -29,6 +29,11 @@ class MainPage:
     util_h = c.height * c.util_height_ratio  # Utility height
     #endregion
 
+    # Hold on to the values for the images so they are not garbage collected
+    store_image_1 = None
+    store_image_2 = None
+    store_image_3 = None
+
     def __init__(self):
         # Construct the window
         self.app_window = BuildWindow(c.title, c.width, c.height)
@@ -72,6 +77,8 @@ class MainPage:
         new_map = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(resize_map))
         self.map_canvas.create_image(int(c.width * .67) / 2, int(self.map_h) / 2, image=new_map)
 
+        return new_map
+
     def update_images(self):
         # Delete the old images
         fih.delete_images(c.cleanup_directory)
@@ -79,13 +86,12 @@ class MainPage:
         # Create and save the new images - by timestamp
         fih.save_images(c.timestamp, c.cleanup_directory)
 
+        print("timestamp: ", c.timestamp)
+
         # Load and draw the new images to the gui
-        self.load_and_draw_images(c.cleanup_directory)
+        return self.load_and_draw_images(c.cleanup_directory)
 
     def load_and_draw_images(self, path):
-
-        print(path + "/image_1.png")
-
         # Load the images
         img1 = cv2.cvtColor(cv2.imread(path + "/image_1.png"), cv2.COLOR_BGR2RGB)
         img2 = cv2.cvtColor(cv2.imread(path + "/image_2.png"), cv2.COLOR_BGR2RGB)
@@ -113,6 +119,12 @@ class MainPage:
         self.img3_canvas.create_image(((int(c.width * c.c2_width_ratio) / 2),
                                                 int(c.height * c.img_height_ratio) / 2), image=new_img3)
 
+        self.store_image_1 = new_img1
+        self.store_image_2 = new_img2
+        self.store_image_3 = new_img3
+
+        return new_img1, new_img2, new_img3
+
     #region ### Mouse and keyboard operations ###
 
     def mouse_click(self, event):
@@ -120,47 +132,47 @@ class MainPage:
         timestamp_ops.find_timestamp(event.x, event.y)
 
         # Update the images
-        self.update_images()
+        new_img1, new_img2, new_img3 = self.update_images()
 
     def arrow_left(self, event):
         # Update the timestamp
         c.timestamp = c.timestamp - 1
 
         # Update the images
-        self.update_images()
+        new_img1, new_img2, new_img3 = self.update_images()
 
     def arrow_right(self, event):
         # Update the timestamp
         c.timestamp = c.timestamp + 1
 
         # Update the images
-        self.update_images()
+        new_img1, new_img2, new_img3 = self.update_images()
 
     def arrow_up(self, event):
         # Update the timestamp
         c.timestamp = c.timestamp + 10
 
         # Update the images
-        self.update_images()
+        new_img1, new_img2, new_img3 = self.update_images()
 
     def arrow_down(self, event):
         # Update the timestamp
         c.timestamp = c.timestamp - 10
 
         # Update the images
-        self.update_images()
+        new_img1, new_img2, new_img3 = self.update_images()
 
     #endregion
 
     def set_key_bindings(self):
         # Button bindings used to traverse the .avi file via the map
         # Bind the left and right arrow keys to the window to allow the user to go one frame further or one frame back
-        self.win_con.bind("<Left>", self.arrow_left)
-        self.win_con.bind("<Right>", self.arrow_right)
+        self.map_canvas.bind("<Left>", self.arrow_left)
+        self.map_canvas.bind("<Right>", self.arrow_right)
 
         # Bind the up and down arrow keys to the window to allow the user to go 10 frames further or backwards
-        self.win_con.bind("<Up>", self.arrow_up)
-        self.win_con.bind("<Down>", self.arrow_down)
+        self.map_canvas.bind("<Up>", self.arrow_up)
+        self.map_canvas.bind("<Down>", self.arrow_down)
 
     def set_button_bindings(self):
         # Key bindings used to traverse the .avi file via the map (may add additional functionality later on
