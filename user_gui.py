@@ -55,6 +55,23 @@ class MainPage:
         self.img3_canvas = BuildCanvas(self.img3_con, MainPage.img_w, MainPage.img_h, NW, "Green")  # Image 3 Canvas
         #endregion
 
+    def draw_map(self, path):
+        # Get the map's path
+        map_path = fih.get_map_path(path)
+
+        #Save the information for the map, this will be used to change variable values
+        temp_map_img = cv2.imread(map_path)
+        c.orig_map_height, c.orig_map_width, _ = temp_map_img.shape
+
+        # Set the x and y map ratios
+        timestamp_ops.set_map_x_y_ratios(self.c1_w, self.map_h)
+
+        # Format and resize the map image and then draw it on the map canvas
+        map_img = cv2.cvtColor(temp_map_img, cv2.COLOR_BGR2RGB)
+        resize_map = cv2.resize(map_img, ((int(c.width * .67)), int(self.map_h)))
+        new_map = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(resize_map))
+        self.map_canvas.create_image(int(c.width * .67) / 2, int(self.map_h) / 2, image=new_map)
+
     def update_images(self):
         # Delete the old images
         fih.delete_images(c.cleanup_directory)

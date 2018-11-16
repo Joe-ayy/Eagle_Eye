@@ -26,6 +26,12 @@ def main():
         app.set_button_bindings()
         app.set_key_bindings()
 
+        # Draw the map and load in relevant data
+        app.draw_map(c.cleanup_directory)
+
+        # Load the initial images that are able to be updated once mainloop start
+        app.update_images()
+
         # Run the application
         app.app_window.mainloop()
 
