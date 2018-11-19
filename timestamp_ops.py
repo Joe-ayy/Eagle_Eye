@@ -1,11 +1,7 @@
-from file_and_image_handling import *
 import config
 
 
-def get_offsets(cleanup_path):
-    # Get the offset_file via the full path to the file
-    offset_file = get_info_path(cleanup_path)
-
+def get_offsets(offset_file):
     # Open the file for reading and read a line
     file = open(offset_file, 'r')
     line = file.readline()
@@ -22,17 +18,21 @@ def get_offsets(cleanup_path):
     # Close the file
     file.close()
 
-    config.x_offset = int(line[x_start_pos + 2: y_start_pos])
-    config.y_offset = int(line[y_start_pos + 1: y_end_pos])
+    x_offset = int(line[x_start_pos + 2: y_start_pos])
+    y_offset = int(line[y_start_pos + 1: y_end_pos])
+
+    return x_offset, y_offset
 
 
-def set_map_x_y_ratios(resize_x, resize_y):
+def set_map_x_y_ratios(orig_w, orig_h, resize_x, resize_y):
     # Set the ratio values in the config file - May need to be adjusted later on depending on program functionality
-    config.map_ratio_x = config.orig_map_width / resize_x
-    config.map_ratio_y = config.orig_map_height / resize_y
+    map_ratio_x = orig_w / resize_x
+    map_ratio_y = orig_h / resize_y
+
+    return map_ratio_x, map_ratio_y
 
 
-def convert_pixel_location(gui_map_coords):
+def convert_pixel_location(gui_map_coords, map_ratio_x, map_ratio_y):
     # Convert the pixel location (x, y) in the resized map in the gui to the actual (x, y) in the original store map
     gui_map_x = int(gui_map_coords[0])
     gui_map_y = int(gui_map_coords[1])
@@ -41,8 +41,8 @@ def convert_pixel_location(gui_map_coords):
     gui_map_y = (config.height * config.map_height_ratio) - gui_map_y
 
     # Round the floating pixel values using int
-    actual_map_x = int(gui_map_x * config.map_ratio_x)
-    actual_map_y = int(gui_map_y * config.map_ratio_y)
+    actual_map_x = int(gui_map_x * map_ratio_x)
+    actual_map_y = int(gui_map_y * map_ratio_y)
 
     # Convert the new pixel values to meters
     map_x_meters = actual_map_x * config.p2m
@@ -54,18 +54,18 @@ def convert_pixel_location(gui_map_coords):
     return map_coords_meters
 
 
-def find_timestamp(x, y):
+def find_timestamp(x, y, ratio_x, ratio_y, x_offset, y_offset, trajectory_file):
     # Get the x and y coordinates in meters
-    map_x_y_meters = convert_pixel_location([x, y])
+    map_x_y_meters = convert_pixel_location([x, y], ratio_x, ratio_y)
 
     print("Map x (meters): ", map_x_y_meters[0], "Map y (meters): ", map_x_y_meters[1])
 
     # Subtract the offset to the coordinates
-    map_x_y_meters[0] = map_x_y_meters[0] - config.x_offset * config.p2m
-    map_x_y_meters[1] = map_x_y_meters[1] - config.y_offset * config.p2m
+    map_x_y_meters[0] = map_x_y_meters[0] - x_offset * config.p2m
+    map_x_y_meters[1] = map_x_y_meters[1] - y_offset * config.p2m
 
     # Open the file
-    file = open(config.traj_file, 'r')
+    file = open(trajectory_file, 'r')
 
     # Read the first 14 lines, with the 15th line being the first data entry in the file
     for i in range(0, 14):
@@ -88,9 +88,9 @@ def find_timestamp(x, y):
         # data_list[0] = float x, data_list[1] = float y, data_list[2] = float z, data_list[3] = float roll
         # data_list[4] = float pitch, data_list[5] = float yaw, data_list[6] = float time, data_list[7] = float scm
         if (abs(x_val - map_x_y_meters[0]) < .5) and (abs(y_val - map_x_y_meters[1]) < .5):
-            config.timestamp = int(round(float(data_list[6]), 0))
+            timestamp = int(round(float(data_list[6]), 0))
             file.close()
-            return
+            return timestamp
 
     file.close()
 

@@ -43,6 +43,9 @@ class LoadAviImages:
                 # If the frame of the video (the image) returns correctly, add it to the list
                 if ret:
                     self.avi_images[timestamp] = image
+                    print("Image obtained, timestamp: ", timestamp)
+                else:
+                    break
 
                 # Increment the timestamp
                 timestamp = timestamp + 1
@@ -51,6 +54,11 @@ class LoadAviImages:
             avi_file.release()
 
     def get_3_images(self, timestamp):
+        # Initialize 3 images
+        image_1 = None
+        image_2 = None
+        image_3 = None
+
         # Iterate until the timestamp is reached, then access the image at the timestamp store in the dictionary
         for i in range(0, timestamp + 2):
             # Create the 3 images based on the time stamp
@@ -99,7 +107,7 @@ class FilePathHandler:
         if info_file == "":
             self.info_file_path = path
         else:
-            self.map_file_path = path + '/' + info_file
+            self.info_file_path = path + '/' + info_file
         if trajectory_file == "":
             self.trajectory_file_path = path
         else:

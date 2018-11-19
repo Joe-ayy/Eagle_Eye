@@ -12,7 +12,7 @@ cx_Freeze.setup(
     name="Eagle Eye",
     options={"build_exe": {"packages":["tkinter", "cv2", "PIL", "numpy", "re", "os"],
                            "include_files":["user_gui.py", "gui_builder.py", "timestamp_ops.py",
-                                            "file_and_image_handling.py", "config.py"]}},
+                                            "config.py"]}},
     version="0.04",
     description="Store map image traversal application",
     executables=executables
