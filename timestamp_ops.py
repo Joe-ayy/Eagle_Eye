@@ -45,8 +45,8 @@ def convert_pixel_location(gui_map_coords, map_ratio_x, map_ratio_y):
     actual_map_y = int(gui_map_y * map_ratio_y)
 
     # Convert the new pixel values to meters
-    map_x_meters = actual_map_x * config.p2m
-    map_y_meters = actual_map_y * config.p2m
+    map_x_meters = actual_map_x * config.m2p
+    map_y_meters = actual_map_y * config.m2p
 
     # Package as a list
     map_coords_meters = [map_x_meters, map_y_meters]
@@ -61,8 +61,8 @@ def find_timestamp(x, y, ratio_x, ratio_y, x_offset, y_offset, trajectory_list):
     print("Map x (meters): ", map_x_y_meters[0], "Map y (meters): ", map_x_y_meters[1])
 
     # Subtract the offset to the coordinates
-    map_x_y_meters[0] = map_x_y_meters[0] - x_offset * config.p2m
-    map_x_y_meters[1] = map_x_y_meters[1] - y_offset * config.p2m
+    map_x_y_meters[0] = map_x_y_meters[0] - x_offset * config.m2p
+    map_x_y_meters[1] = map_x_y_meters[1] - y_offset * config.m2p
 
     # Loop through the trajectory list
     for i in range(0, len(trajectory_list)):
@@ -75,3 +75,37 @@ def find_timestamp(x, y, ratio_x, ratio_y, x_offset, y_offset, trajectory_list):
 
     # Temporary fix, just return 1 as the timestamp
     return -1
+
+
+def find_xy_in_pixels(timestamp, ratio_x, ratio_y, x_offset, y_offset, trajectory_list):
+    # Initialize the x value and y value
+    x_val_meters = 0.0
+    y_val_meters = 0.0
+
+    # Loop through the trajectory list looking for the timestamp, once found, save the x and y values and break
+    # out of the loop
+    for i in range(0, len(trajectory_list)):
+        ts_in_list = trajectory_list[i][2]
+        if timestamp == int(round(float(ts_in_list), 0)):
+            x_val_meters = float(trajectory_list[i][0])
+            y_val_meters = float(trajectory_list[i][1])
+            break
+
+    # Convert the x and y values from meters to pixels
+    actual_map_x = x_val_meters / config.m2p
+    actual_map_y = y_val_meters / config.m2p
+
+    # Add the offset to the coordinates
+    actual_map_x = actual_map_x + x_offset
+    actual_map_y = actual_map_y + y_offset
+
+    # Convert the x and y values from actual map pixels to gui sized map pixels
+    gui_map_x = actual_map_x / ratio_x
+    gui_map_y = actual_map_y / ratio_y
+
+    # Switch the origin from the bottom left to the top right
+    gui_map_y = (config.height * config.map_height_ratio) - gui_map_y
+
+    # Convert the values for the gui pixel values to ints and return them
+    #print("gui_map_x: ", int(gui_map_x), "gui_map_y: ", int(gui_map_y))
+    return int(gui_map_x), int(gui_map_y)

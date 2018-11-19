@@ -2,7 +2,6 @@ from tkinter.filedialog import *
 
 ###
 from user_gui import *
-from timestamp_ops import *
 from file_handler import *
 ###
 

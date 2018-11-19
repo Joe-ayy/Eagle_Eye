@@ -36,8 +36,9 @@ class MainPage:
     orig_map_w = 0  # Original map width
     orig_map_h = 0  # Original map height
 
-    # Hold on to the values for the images so they are not garbage collected
+    # Hold on to the values for the images and objects so they are not garbage collected
     map_image = None
+    user_position = None
     store_image_1 = None
     store_image_2 = None
     store_image_3 = None
@@ -129,9 +130,34 @@ class MainPage:
 
         self.map_image = new_map
 
+    def draw_position(self):
+        # Try to delete the circle before drawing a new one
+        try:
+            self.map_canvas.delete(self.user_position)
+        except:
+            pass
+
+        # Get an x,y coordinate pair based on the timestamp to determine the location to draw the circle
+        x_position, y_position = t_ops.find_xy_in_pixels(self.timestamp, self.map_ratio_x, self.map_ratio_y,
+                                                         self.x_offset, self.y_offset, self.trajectory_data.list_data)
+
+        # Determine the top left and bottom right coordinates for the circle
+        top_x = int(x_position - (.4 / c.m2p))
+        top_y = int(y_position - (.4 / c.m2p))
+        bot_x = int(x_position + (.4 / c.m2p))
+        bot_y = int(y_position + (.4 / c.m2p))
+
+        #print("Bounding box: ", top_x, top_y, "|", bot_x, bot_y)
+
+        user_circle = self.map_canvas.create_oval(top_x, top_y, bot_x, bot_y, fill="orange")
+
+        self.user_position = user_circle
+
     def update_images(self):
         # Print out the timestamp - debugging purposes
         print("timestamp: ", self.timestamp)
+
+        self.draw_position()
 
         # Load and draw the new images to the gui
         self.load_and_draw_images()
