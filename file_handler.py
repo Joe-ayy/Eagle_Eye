@@ -7,6 +7,9 @@ class LoadAviImages:
     # Create a dictionary to hold the timestamp and the image
     avi_images = {}
 
+    # Initialize timestamp to count how many seconds long the .avi file is (1 frame = 1 second)
+    timestamp = 0
+
     def __init__(self, path):
         # When the class is initialized, create and fill a dictionary
         # Define the path to the .avi file
@@ -14,9 +17,6 @@ class LoadAviImages:
 
         # Initialize the .avi filename
         avi_name = ""
-
-        # Initialize the timestamp
-        timestamp = 0
 
         # Find the .avi file in the directory using a regular expression
         for file in os.listdir(avi_dir):
@@ -42,13 +42,13 @@ class LoadAviImages:
 
                 # If the frame of the video (the image) returns correctly, add it to the list
                 if ret:
-                    self.avi_images[timestamp] = image
-                    print("Image obtained, timestamp: ", timestamp)
+                    self.avi_images[self.timestamp] = image
+                    print("Image obtained, timestamp: ", self.timestamp)
                 else:
                     break
 
                 # Increment the timestamp
-                timestamp = timestamp + 1
+                self.timestamp = self.timestamp + 1
 
             # Release the VideoCapture object
             avi_file.release()
@@ -70,6 +70,44 @@ class LoadAviImages:
                 image_3 = self.avi_images[timestamp]
 
         return image_1, image_2, image_3
+
+
+class LoadTrajectoryData:
+    # Create a list to hold the x, y, and the timestamp
+    list_data = []
+
+    def __init__(self, path):
+        # Open the trajectory file
+        file = open(path, 'r')
+
+        # Read the first 14 lines, with the 15th line being the first data entry in the file
+        for i in range(0, 15):
+            line = file.readline()
+
+        # Loop through the trajectory file until the eof has been reached
+        while not line.isspace():
+            data_list = line.split(' ')
+
+            # The data_list list has 8 components, they are as follows:
+            # data_list[0] = float x, data_list[1] = float y, data_list[2] = float z, data_list[3] = float roll
+            # data_list[4] = float pitch, data_list[5] = float yaw
+            # data_list[6] = float time, data_list[7] = float scm
+
+            try:
+                x_val = float(data_list[0])
+                y_val = float(data_list[1])
+                timestamp = int(round(float(data_list[6]), 0))
+            except ValueError:
+                break
+
+            # Save the data to the list
+            self.list_data.append([x_val, y_val, timestamp])
+
+            # Read in the next line
+            line = file.readline()
+
+        # Close the file
+        file.close()
 
 
 class FilePathHandler:

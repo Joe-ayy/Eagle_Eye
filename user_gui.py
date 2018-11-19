@@ -45,8 +45,11 @@ class MainPage:
     # Save the directory path to be used by class
     directory_path = ""
 
-    # Create the object used to traverse the data structures used for the .avi file
+    # Create the object used to traverse the data structure used for the .avi file
     avi_data = None
+
+    # Create the object used to traverse the data structure used for the trajectory file
+    trajectory_data = None
 
     # Initialize the paths for the map, info, and trajectory files
     map_file = ""
@@ -80,11 +83,11 @@ class MainPage:
         #endregion
 
         #region ### Construct all the canvases ###
-        self.map_canvas = BuildCanvas(self.map_con, self.c1_w, self.map_h, NW, "Blue")  # Map Canvas
+        self.map_canvas = BuildCanvas(self.map_con, self.c1_w, self.map_h, NW)  # Map Canvas
 
-        self.img1_canvas = BuildCanvas(self.img1_con, MainPage.img_w, MainPage.img_h, NW, "Red")  # Image 1 Canvas
-        self.img2_canvas = BuildCanvas(self.img2_con, MainPage.img_w, MainPage.img_h, NW, "Yellow")  # Image 2 Canvas
-        self.img3_canvas = BuildCanvas(self.img3_con, MainPage.img_w, MainPage.img_h, NW, "Green")  # Image 3 Canvas
+        self.img1_canvas = BuildCanvas(self.img1_con, MainPage.img_w, MainPage.img_h, NW)  # Image 1 Canvas
+        self.img2_canvas = BuildCanvas(self.img2_con, MainPage.img_w, MainPage.img_h, NW)  # Image 2 Canvas
+        self.img3_canvas = BuildCanvas(self.img3_con, MainPage.img_w, MainPage.img_h, NW)  # Image 3 Canvas
         #endregion
 
         # Set the focus to the map canvas for keybindings
@@ -94,13 +97,16 @@ class MainPage:
         # Set the directory path
         self.directory_path = path
 
-        # Create the .avi data structure
-        self.avi_data = fh.LoadAviImages(path)
-
         # Set the values for the paths to the map, info, and trajectory files
         self.map_file = loaded_file_paths[0]
         self.info_file = loaded_file_paths[1]
         self.trajectory_file = loaded_file_paths[2]
+
+        # Create the .avi data structure
+        self.avi_data = fh.LoadAviImages(path)
+
+        # Create the trajectory file data structure
+        self.trajectory_data = fh.LoadTrajectoryData(self.trajectory_file)
 
         # Set the offset values
         self.x_offset, self.y_offset = t_ops.get_offsets(self.info_file)
@@ -161,35 +167,39 @@ class MainPage:
         # Find the timestamp
         self.timestamp = t_ops.find_timestamp(event.x, event.y,
                                               self.map_ratio_x, self.map_ratio_y, self.x_offset, self.y_offset,
-                                              self.trajectory_file)
+                                              self.trajectory_data.list_data)
 
         # Update the images
         self.update_images()
 
     def arrow_left(self, event):
         # Update the timestamp
-        self.timestamp = self.timestamp - 1
+        if self.timestamp > 1:
+            self.timestamp = self.timestamp - 1
 
         # Update the images
         self.update_images()
 
     def arrow_right(self, event):
         # Update the timestamp
-        self.timestamp = self.timestamp + 1
+        if self.timestamp < self.avi_data.timestamp - 1:
+            self.timestamp = self.timestamp + 1
 
         # Update the images
         self.update_images()
 
     def arrow_up(self, event):
         # Update the timestamp
-        self.timestamp = self.timestamp + 10
+        if self.timestamp < self.avi_data.timestamp - 10:
+            self.timestamp = self.timestamp + 10
 
         # Update the images
         self.update_images()
 
     def arrow_down(self, event):
         # Update the timestamp
-        self.timestamp = self.timestamp - 10
+        if self.timestamp > 10:
+            self.timestamp = self.timestamp - 10
 
         # Update the images
         self.update_images()

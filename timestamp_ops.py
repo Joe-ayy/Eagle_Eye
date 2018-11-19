@@ -54,7 +54,7 @@ def convert_pixel_location(gui_map_coords, map_ratio_x, map_ratio_y):
     return map_coords_meters
 
 
-def find_timestamp(x, y, ratio_x, ratio_y, x_offset, y_offset, trajectory_file):
+def find_timestamp(x, y, ratio_x, ratio_y, x_offset, y_offset, trajectory_list):
     # Get the x and y coordinates in meters
     map_x_y_meters = convert_pixel_location([x, y], ratio_x, ratio_y)
 
@@ -64,35 +64,14 @@ def find_timestamp(x, y, ratio_x, ratio_y, x_offset, y_offset, trajectory_file):
     map_x_y_meters[0] = map_x_y_meters[0] - x_offset * config.p2m
     map_x_y_meters[1] = map_x_y_meters[1] - y_offset * config.p2m
 
-    # Open the file
-    file = open(trajectory_file, 'r')
+    # Loop through the trajectory list
+    for i in range(0, len(trajectory_list)):
+        x_val = float(trajectory_list[i][0])
+        y_val = float(trajectory_list[i][1])
 
-    # Read the first 14 lines, with the 15th line being the first data entry in the file
-    for i in range(0, 14):
-        line = file.readline()
-
-    # Loop through the trajectory file
-    while line != '\n' or line != '':
-        line = file.readline()  # First pass of this loop is the first line of data
-
-        data_list = line.split(' ')
-
-        #print("Data list: ", data_list)
-
-        x_val = float(data_list[0])
-        y_val = float(data_list[1])
-
-        #print("x: ", x_val, "y: ", y_val)
-
-        # The data_list list has 8 components, they are as follows
-        # data_list[0] = float x, data_list[1] = float y, data_list[2] = float z, data_list[3] = float roll
-        # data_list[4] = float pitch, data_list[5] = float yaw, data_list[6] = float time, data_list[7] = float scm
         if (abs(x_val - map_x_y_meters[0]) < .5) and (abs(y_val - map_x_y_meters[1]) < .5):
-            timestamp = int(round(float(data_list[6]), 0))
-            file.close()
+            timestamp = int(round(float(trajectory_list[i][2]), 0))
             return timestamp
-
-    file.close()
 
     # Temporary fix, just return 1 as the timestamp
     return -1
