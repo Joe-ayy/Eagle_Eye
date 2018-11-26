@@ -63,11 +63,11 @@ class LoadAviImages:
         for i in range(0, timestamp + 2):
             # Create the 3 images based on the time stamp
             if (timestamp - i) == 1:
-                image_1 = self.avi_images[timestamp]
+                image_1 = self.avi_images[timestamp + 1]
             elif (timestamp - i) == 0:
                 image_2 = self.avi_images[timestamp]
             elif (timestamp - i) == -1:
-                image_3 = self.avi_images[timestamp]
+                image_3 = self.avi_images[timestamp - 1]
 
         return image_1, image_2, image_3
 
