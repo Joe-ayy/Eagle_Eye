@@ -5,11 +5,10 @@ from user_gui import *
 from file_handler import *
 ###
 
-# AT SOME POINT IN THE MAIN BEFORE THE PROGRAM GETS GOING, CHECK TO MAKE SURE ALL NEEDED FILES ARE THERE
-
 
 def main():
     # Prompt the user to select the directory that contains all the necessary map editing files
+    Tk().withdraw()  # Hides the original window
     cleanup_directory = askdirectory()
 
     if cleanup_directory != '':
