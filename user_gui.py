@@ -1,4 +1,5 @@
 import cv2
+import sys
 from tkinter import *
 import PIL.Image
 import PIL.ImageTk
@@ -91,6 +92,19 @@ class MainPage:
         self.img3_canvas = BuildCanvas(self.img3_con, MainPage.img_w, MainPage.img_h, NW)  # Image 3 Canvas
         #endregion
 
+        # Get the store's name and number - used to display in a label
+        store_info = fh.get_store_info(path)
+
+        #region ### Construct and display labels ###
+        self.map_name_label = BuildStaticLabel(self.util_con, "Map: " + store_info, NW, 14)
+        self.timestamp_label_text = StringVar()
+        self.timestamp_label_text.set("Timestamp: " + str(self.timestamp))
+
+        self.timestamp_label = Label(self.util_con, textvariable=self.timestamp_label_text,
+                                     font=("Times New Roman", 14), relief=RIDGE, padx=3, bg="light steel blue")
+        self.timestamp_label.pack(anchor=SW)
+        #endregion
+
         # Set the focus to the map canvas for keybindings
         self.map_canvas.focus_set()
 
@@ -139,7 +153,7 @@ class MainPage:
 
         # Get an x,y coordinate pair based on the timestamp to determine the location to draw the circle
         x_position, y_position = t_ops.find_xy_in_pixels(self.timestamp, self.map_ratio_x, self.map_ratio_y,
-                                                         self.x_offset, self.y_offset, self.trajectory_data.list_data)
+                                                     self.x_offset, self.y_offset, self.trajectory_data.list_data)
 
         # Determine the top left and bottom right coordinates for the circle
         top_x = int(x_position - (.4 / c.m2p))
@@ -158,16 +172,21 @@ class MainPage:
         print("timestamp: ", self.timestamp)
 
         self.draw_position()
+        self.update_timestamp_label()
 
         # Load and draw the new images to the gui
         self.load_and_draw_images()
+
+    def update_timestamp_label(self):
+        # Change the time stamp label text
+        self.timestamp_label_text.set("Timestamp: " + str(self.timestamp))
 
     def load_and_draw_images(self):
         # Assign the images based on the timestamp
         img1, img2, img3 = self.avi_data.get_3_images(self.timestamp)
 
         # Resize the images and draw them on the canvas
-        # Image 1
+        #  Image 1
         resize_img1 = cv2.resize(img1, ((int(c.width * c.c2_width_ratio)), int(c.height * c.img_height_ratio)))
         new_img1 = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(resize_img1))
         self.img1_canvas.create_image(((int(c.width * c.c2_width_ratio) / 2),
@@ -191,12 +210,15 @@ class MainPage:
 
     def mouse_click(self, event):
         # Find the timestamp
-        self.timestamp = t_ops.find_timestamp(event.x, event.y,
+        temp_timestamp = t_ops.find_timestamp(event.x, event.y,
                                               self.map_ratio_x, self.map_ratio_y, self.x_offset, self.y_offset,
                                               self.trajectory_data.list_data)
+        # Only change the timestamp and update the window elements if a valid one is found
+        if temp_timestamp != -1:
+            self.timestamp = temp_timestamp
 
-        # Update the images
-        self.update_images()
+            # Update the images
+            self.update_images()
 
     def arrow_left(self, event):
         # Update the timestamp
@@ -232,6 +254,9 @@ class MainPage:
 
     #endregion
 
+    def quit_program(self):
+        sys.exit()
+
     def set_key_bindings(self):
         # Button bindings used to traverse the .avi file via the map
         # Bind the left and right arrow keys to the window to allow the user to go one frame further or one frame back
@@ -241,6 +266,9 @@ class MainPage:
         # Bind the up and down arrow keys to the window to allow the user to go 10 frames further or backwards
         self.map_canvas.bind("<Up>", self.arrow_up)
         self.map_canvas.bind("<Down>", self.arrow_down)
+
+        # Bind the window close event (x in top right corner)
+        self.app_window.protocol("WM_DELETE_WINDOW", self.quit_program)
 
     def set_button_bindings(self):
         # Key bindings used to traverse the .avi file via the map (may add additional functionality later on

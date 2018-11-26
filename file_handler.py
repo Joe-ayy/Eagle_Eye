@@ -204,3 +204,31 @@ class FilePathHandler:
             self.trajectory_file_path = path
         else:
             self.trajectory_file_path = path + '/' + trajectory_file
+
+
+def get_store_info(path):
+    # Look at the path name and find the store name from the directory
+    store_name_start_pos = path.find(r'Documents')
+    store_name_start_pos = store_name_start_pos + len("Documents") + 1
+
+    # Save the short hand for the store name and number
+    store_acronym = path[store_name_start_pos:]
+
+    # Determine if the store is a Stop & Shop or Giant Martin
+    if store_acronym[:3].upper() == "SNS":
+        store_name = "Stop & Shop "
+
+        # Parse out the store number
+        store_number = store_acronym[3:]
+
+    elif store_acronym[:2].upper() == "GM":
+        store_name = "Giant Martin "
+
+        # Parse out the store number
+        store_number = store_acronym[2:]
+
+    else:
+        store_name = "Unknown Store "
+        store_number = ""
+
+    return store_name + store_number
