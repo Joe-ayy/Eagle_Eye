@@ -56,12 +56,12 @@ class LoadAviImages:
         self.avi_file.set(1, self.timestamp - 1)
 
         # Read the 3 images in, setting them to images 1, 2, and 3
-        ret, image1 = self.avi_file.read()
-        image_1 = image1
-        ret, image2 = self.avi_file.read()
-        image_2 = image2
         ret, image3 = self.avi_file.read()
         image_3 = image3
+        ret, image2 = self.avi_file.read()
+        image_2 = image2
+        ret, image1 = self.avi_file.read()
+        image_1 = image1
 
         return image_1, image_2, image_3
 
