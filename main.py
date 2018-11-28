@@ -7,8 +7,14 @@ from file_handler import *
 
 
 def main():
+    # Hides the original window
+    Tk().withdraw()
+
+    # Create a splash screen to display to the user
+    #splash_screen = BuildWindow("Welcome to Eagle Eye!", 500, 200, False, False, 400, 500)
+    #splash_screen.after(5000, splash_screen.destroy)
+
     # Prompt the user to select the directory that contains all the necessary map editing files
-    Tk().withdraw()  # Hides the original window
     cleanup_directory = askdirectory()
 
     if cleanup_directory != '':

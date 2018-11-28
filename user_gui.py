@@ -105,7 +105,8 @@ class MainPage:
         self.timestamp_label.pack(anchor=SW)
         #endregion
 
-        # Set the focus to the map canvas for keybindings
+        # Set the focus to the window and the map canvas for keybindings
+        self.app_window.focus_set()
         self.map_canvas.focus_set()
 
         # region ### Set values for files and initialized variables belonging to MainPage ###
