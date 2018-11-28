@@ -208,18 +208,19 @@ def get_store_info(path):
     # Save the short hand for the store name and number
     store_acronym = path[store_name_start_pos:]
 
-    # Determine if the store is a Stop & Shop or Giant Martin
-    if store_acronym[:3].upper() == "SNS":
-        store_name = "Stop & Shop "
+    store_number = ""
 
-        # Parse out the store number
-        store_number = store_acronym[3:]
+    # Save the store number
+    for char in store_acronym:
+        if char.isdigit():
+            store_number = store_number + char
+
+    # Determine if the store is a Stop & Shop or Giant Martin
+    if store_acronym[:3].upper() == "SNS" or store_acronym[:2].upper() == "SS":
+        store_name = "Stop & Shop "
 
     elif store_acronym[:2].upper() == "GM":
         store_name = "Giant Martin "
-
-        # Parse out the store number
-        store_number = store_acronym[2:]
 
     else:
         store_name = "Unknown Store "
