@@ -223,23 +223,23 @@ class MainPage:
 
     def arrow_left(self, event):
         # Update the timestamp
-        if self.timestamp > 1:
-            self.timestamp = self.timestamp - 1
+        if self.timestamp > 2:
+            self.timestamp = self.timestamp - 2
 
         # Update the images
         self.update_images()
 
     def arrow_right(self, event):
         # Update the timestamp
-        if self.timestamp < self.avi_data.timestamp - 1:
-            self.timestamp = self.timestamp + 1
+        if self.timestamp < self.avi_data.num_frames - 2:
+            self.timestamp = self.timestamp + 2
 
         # Update the images
         self.update_images()
 
     def arrow_up(self, event):
         # Update the timestamp
-        if self.timestamp < self.avi_data.timestamp - 10:
+        if self.timestamp < self.avi_data.num_frames - 10:
             self.timestamp = self.timestamp + 10
 
         # Update the images

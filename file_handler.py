@@ -4,11 +4,17 @@ import os
 
 
 class LoadAviImages:
-    # Create a dictionary to hold the timestamp and the image
-    avi_images = {}
-
-    # Initialize timestamp to count how many seconds long the .avi file is (1 frame = 1 second)
+    # Initialize timestamp to find frame position in .avi file 0 <= timestamp <= # of frames in .avi file
     timestamp = 0
+
+    # Initialize the number of frames in the .avi file
+    num_frames = 0
+
+    # Initialize the .avi file reader object
+    avi_file = None
+
+    # Initialize the path to the .avi file
+    avi_full_path = ""
 
     def __init__(self, path):
         # When the class is initialized, create and fill a dictionary
@@ -30,44 +36,32 @@ class LoadAviImages:
             print(".avi file not found!")
         else:
             # .avi file full path
-            avi_full_path = avi_dir + avi_name
+            self.avi_full_path = avi_dir + avi_name
 
-            # Open the .avi file
-            avi_file = cv2.VideoCapture(avi_full_path)
-
-            # Read each frame in the video until it is complete
-            while avi_file.isOpened():
-                # Obtain each image
-                ret, image = avi_file.read()
-
-                # If the frame of the video (the image) returns correctly, add it to the list
-                if ret:
-                    self.avi_images[self.timestamp] = image
-                    print("Image obtained, timestamp: ", self.timestamp)
-                else:
-                    break
-
-                # Increment the timestamp
-                self.timestamp = self.timestamp + 1
-
-            # Release the VideoCapture object
-            avi_file.release()
+        # Get the length of the .avi file and set its value
+        self.avi_file = cv2.VideoCapture(self.avi_full_path)
+        self.num_frames = self.avi_file.get(7)
 
     def get_3_images(self, timestamp):
+        # Set the timestamp
+        self.timestamp = timestamp
+        print("LoadAviImages timestamp: ", self.timestamp)
+
         # Initialize 3 images
         image_1 = None
         image_2 = None
         image_3 = None
 
-        # Iterate until the timestamp is reached, then access the image at the timestamp store in the dictionary
-        for i in range(0, timestamp + 2):
-            # Create the 3 images based on the time stamp
-            if (timestamp - i) == 1:
-                image_1 = self.avi_images[timestamp + 1]
-            elif (timestamp - i) == 0:
-                image_2 = self.avi_images[timestamp]
-            elif (timestamp - i) == -1:
-                image_3 = self.avi_images[timestamp - 1]
+        # Set the current frame to 1 second before the current timestamp
+        self.avi_file.set(1, self.timestamp - 1)
+
+        # Read the 3 images in, setting them to images 1, 2, and 3
+        ret, image1 = self.avi_file.read()
+        image_1 = image1
+        ret, image2 = self.avi_file.read()
+        image_2 = image2
+        ret, image3 = self.avi_file.read()
+        image_3 = image3
 
         return image_1, image_2, image_3
 
