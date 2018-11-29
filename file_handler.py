@@ -1,6 +1,7 @@
 import cv2
 import re
 import os
+import math
 
 
 class LoadAviImages:
@@ -45,23 +46,19 @@ class LoadAviImages:
     def get_3_images(self, timestamp):
         # Set the timestamp
         self.timestamp = timestamp
-        print("LoadAviImages timestamp: ", self.timestamp)
 
         # Initialize 3 images
-        image_1 = None
-        image_2 = None
-        image_3 = None
+        #image_1 = None
+        #image_2 = None
+        #image_3 = None
 
         # Set the current frame to 1 second before the current timestamp
         self.avi_file.set(1, self.timestamp - 1)
 
         # Read the 3 images in, setting them to images 1, 2, and 3
-        ret, image3 = self.avi_file.read()
-        image_3 = image3
-        ret, image2 = self.avi_file.read()
-        image_2 = image2
-        ret, image1 = self.avi_file.read()
-        image_1 = image1
+        ret, image_3 = self.avi_file.read()
+        ret, image_2 = self.avi_file.read()
+        ret, image_1 = self.avi_file.read()
 
         return image_1, image_2, image_3
 
@@ -70,7 +67,7 @@ class LoadTrajectoryData:
     # Create a list to hold the x, y, and the timestamp
     list_data = []
 
-    def __init__(self, path):
+    def __init__(self, path, num_frames):
         # Open the trajectory file
         file = open(path, 'r')
 
@@ -87,18 +84,21 @@ class LoadTrajectoryData:
             # data_list[4] = float pitch, data_list[5] = float yaw
             # data_list[6] = float time, data_list[7] = float scm
 
-            try:
-                x_val = float(data_list[0])
-                y_val = float(data_list[1])
-                timestamp = int(round(float(data_list[6]), 0))
-            except ValueError:
+            if int(math.floor(float(data_list[6]))) < num_frames - 1:
+                try:
+                    x_val = float(data_list[0])
+                    y_val = float(data_list[1])
+                    timestamp = int(math.floor(float(data_list[6])))
+                except ValueError:
+                    break
+
+                # Save the data to the list
+                self.list_data.append([x_val, y_val, timestamp])
+
+                # Read in the next line
+                line = file.readline()
+            else:
                 break
-
-            # Save the data to the list
-            self.list_data.append([x_val, y_val, timestamp])
-
-            # Read in the next line
-            line = file.readline()
 
         # Close the file
         file.close()

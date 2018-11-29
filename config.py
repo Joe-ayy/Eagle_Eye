@@ -1,7 +1,7 @@
 # Configuration File - Used to set and (possibly) store values and variables in the program
 
 #region ### Settings for the window gui ###
-title = "Eagle Eye v0.6.3"
+title = "Eagle Eye v0.6.5"
 width = 1366
 height = 768
 

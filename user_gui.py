@@ -121,8 +121,8 @@ class MainPage:
         # Create the .avi data structure
         self.avi_data = fh.LoadAviImages(path)
 
-        # Create the trajectory file data structure
-        self.trajectory_data = fh.LoadTrajectoryData(self.trajectory_file)
+        # Create the trajectory file data structure and crimp it to be the same size as the .avi file (by timestamp)
+        self.trajectory_data = fh.LoadTrajectoryData(self.trajectory_file, self.avi_data.num_frames)
 
         # Set the offset values
         self.x_offset, self.y_offset = t_ops.get_offsets(self.info_file)
@@ -231,7 +231,7 @@ class MainPage:
 
     def arrow_right(self, event):
         # Update the timestamp
-        if self.timestamp < self.avi_data.num_frames - 2:
+        if self.timestamp < self.avi_data.num_frames - 3:
             self.timestamp = self.timestamp + 2
 
         # Update the images
@@ -239,7 +239,7 @@ class MainPage:
 
     def arrow_up(self, event):
         # Update the timestamp
-        if self.timestamp < self.avi_data.num_frames - 10:
+        if self.timestamp < self.avi_data.num_frames - 11:
             self.timestamp = self.timestamp + 10
 
         # Update the images
@@ -258,7 +258,7 @@ class MainPage:
     def quit_program(self):
         sys.exit()
 
-    def set_key_bindings(self):
+    def set_bindings(self):
         # Button bindings used to traverse the .avi file via the map
         # Bind the left and right arrow keys to the window to allow the user to go one frame further or one frame back
         self.map_canvas.bind("<Left>", self.arrow_left)
@@ -268,11 +268,10 @@ class MainPage:
         self.map_canvas.bind("<Up>", self.arrow_up)
         self.map_canvas.bind("<Down>", self.arrow_down)
 
-        # Bind the window close event (x in top right corner)
-        self.app_window.protocol("WM_DELETE_WINDOW", self.quit_program)
-
-    def set_button_bindings(self):
         # Key bindings used to traverse the .avi file via the map (may add additional functionality later on
         # Bind the mouse click event to the map_canvas, this allows the user to click on the map and get the pixel
         # coordinates of the point clicked
         self.map_canvas.bind("<Button-1>", self.mouse_click)
+
+        # Bind the window close event (x in top right corner)
+        self.app_window.protocol("WM_DELETE_WINDOW", self.quit_program)

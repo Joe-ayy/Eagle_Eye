@@ -1,4 +1,5 @@
 import config
+import math
 
 
 def get_offsets(offset_file):
@@ -82,13 +83,25 @@ def find_xy_in_pixels(timestamp, ratio_x, ratio_y, x_offset, y_offset, trajector
     x_val_meters = 0.0
     y_val_meters = 0.0
 
-    # Loop through the trajectory list looking for the timestamp, once found, save the x and y values and break
-    # out of the loop
+    # Set a count for how many positions have the same floored timestamp
+    num_timestamps = 0
+
+    # Loop through the trajectory list looking for the timestamp, once found, find the midpoint of all timestamps with
+    # the same floored value, save the x and y values, and break out of the loop
     for i in range(0, len(trajectory_list)):
-        ts_in_list = trajectory_list[i][2]
-        if timestamp == int(round(float(ts_in_list), 0)):
-            x_val_meters = float(trajectory_list[i][0])
-            y_val_meters = float(trajectory_list[i][1])
+        ts_in_list = float(trajectory_list[i][2])
+        if timestamp == math.floor(ts_in_list):
+            for j in range(0, len(trajectory_list) - i):
+                if timestamp == math.floor(trajectory_list[i + j][2]):
+                    num_timestamps = num_timestamps + 1
+                else:
+                    break
+            # Set the midpoint for the timestamps
+            mid_pt = num_timestamps // 2
+
+            # Assign the value of x and y to the first found position plus the midpoint of the floored timestamps
+            x_val_meters = float(trajectory_list[i + mid_pt][0])
+            y_val_meters = float(trajectory_list[i + mid_pt][1])
             break
 
     # Convert the x and y values from meters to pixels

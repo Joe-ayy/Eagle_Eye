@@ -25,9 +25,8 @@ def main():
         app = MainPage(cleanup_directory,
                        [load_files.map_file_path, load_files.info_file_path, load_files.trajectory_file_path])
 
-        # Initialize the mouse and keybindings
-        app.set_button_bindings()
-        app.set_key_bindings()
+        # Initialize the mouse, key, and window bindings
+        app.set_bindings()
 
         # Draw the map and load in relevant data - NOTE: The map needs to be saved so it isn't garbage collected
         app.draw_map()
