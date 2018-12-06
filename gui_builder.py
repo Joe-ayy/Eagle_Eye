@@ -16,10 +16,11 @@ class BuildCanvas(Canvas):
         self.pack(anchor=anchor)
 
 
-class BuildLabel(Label):
+class BuildStaticLabel(Label):
     # Build a label that will be used to display information - to be updated later
-    def __init__(self, master, anchor):
-        Label.__init__(self, master=master)
+    def __init__(self, master, text, anchor, font_size=12, font_name="Times New Roman"):
+        Label.__init__(self, master=master, text=text, font=(font_name, font_size), relief=RIDGE, padx=3,
+                       bg="light steel blue")
         self.pack(anchor=anchor)
 
 

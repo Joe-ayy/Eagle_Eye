@@ -1,13 +1,13 @@
-import time
 import cv2
-import os
+import sys
 from tkinter import *
 import PIL.Image
 import PIL.ImageTk
 import numpy as np
 from gui_builder import *
-import file_and_image_handling as fih
-import timestamp_ops
+from file_handler import *
+import file_handler as fh
+import timestamp_ops as t_ops
 import config as c
 
 # This module serves multiple purposes:
@@ -29,12 +29,44 @@ class MainPage:
     util_h = c.height * c.util_height_ratio  # Utility height
     #endregion
 
-    # Hold on to the values for the images so they are not garbage collected
+    # region ### Initialize data and objects ###
+    # Save and update ratios and original map dimensions
+    map_ratio_x = 0.0  # Calculated as original map width / displayed map width
+    map_ratio_y = 0.0  # Calculated as original map height / displayed map height
+
+    orig_map_w = 0  # Original map width
+    orig_map_h = 0  # Original map height
+
+    # Hold on to the values for the images and objects so they are not garbage collected
+    map_image = None
+    user_position = None
     store_image_1 = None
     store_image_2 = None
     store_image_3 = None
 
-    def __init__(self):
+    # Save the directory path to be used by class
+    directory_path = ""
+
+    # Create the object used to traverse the data structure used for the .avi file
+    avi_data = None
+
+    # Create the object used to traverse the data structure used for the trajectory file
+    trajectory_data = None
+
+    # Initialize the paths for the map, info, and trajectory files
+    map_file = ""
+    info_file = ""
+    trajectory_file = ""
+
+    # Initialize offset values
+    x_offset = 0
+    y_offset = 0
+
+    # Initialize the timestamp to 1
+    timestamp = 1
+    #endregion
+
+    def __init__(self, path, loaded_file_paths):
         # Construct the window
         self.app_window = BuildWindow(c.title, c.width, c.height)
 
@@ -53,23 +85,57 @@ class MainPage:
         #endregion
 
         #region ### Construct all the canvases ###
-        self.map_canvas = BuildCanvas(self.map_con, self.c1_w, self.map_h, NW, "Blue")  # Map Canvas
+        self.map_canvas = BuildCanvas(self.map_con, self.c1_w, self.map_h, NW)  # Map Canvas
 
-        self.img1_canvas = BuildCanvas(self.img1_con, MainPage.img_w, MainPage.img_h, NW, "Red")  # Image 1 Canvas
-        self.img2_canvas = BuildCanvas(self.img2_con, MainPage.img_w, MainPage.img_h, NW, "Yellow")  # Image 2 Canvas
-        self.img3_canvas = BuildCanvas(self.img3_con, MainPage.img_w, MainPage.img_h, NW, "Green")  # Image 3 Canvas
+        self.img1_canvas = BuildCanvas(self.img1_con, MainPage.img_w, MainPage.img_h, NW)  # Image 1 Canvas
+        self.img2_canvas = BuildCanvas(self.img2_con, MainPage.img_w, MainPage.img_h, NW)  # Image 2 Canvas
+        self.img3_canvas = BuildCanvas(self.img3_con, MainPage.img_w, MainPage.img_h, NW)  # Image 3 Canvas
         #endregion
 
-    def draw_map(self, path):
-        # Get the map's path
-        map_path = fih.get_map_path(path)
+        # Get the store's name and number - used to display in a label
+        store_info = fh.get_store_info(path)
 
-        #Save the information for the map, this will be used to change variable values
-        temp_map_img = cv2.imread(map_path)
-        c.orig_map_height, c.orig_map_width, _ = temp_map_img.shape
+        #region ### Construct and display labels ###
+        self.map_name_label = BuildStaticLabel(self.util_con, "Map: " + store_info, NW, 14)
+        self.timestamp_label_text = StringVar()
+        self.timestamp_label_text.set("Timestamp: " + str(self.timestamp))
+
+        self.timestamp_label = Label(self.util_con, textvariable=self.timestamp_label_text,
+                                     font=("Times New Roman", 14), relief=RIDGE, padx=3, bg="light steel blue")
+        self.timestamp_label.pack(anchor=SW)
+        #endregion
+
+        # Set the focus to the window and the map canvas for keybindings
+        self.app_window.focus_set()
+        self.map_canvas.focus_set()
+
+        # region ### Set values for files and initialized variables belonging to MainPage ###
+        # Set the directory path
+        self.directory_path = path
+
+        # Set the values for the paths to the map, info, and trajectory files
+        self.map_file = loaded_file_paths[0]
+        self.info_file = loaded_file_paths[1]
+        self.trajectory_file = loaded_file_paths[2]
+
+        # Create the .avi data structure
+        self.avi_data = fh.LoadAviImages(path)
+
+        # Create the trajectory file data structure and crimp it to be the same size as the .avi file (by timestamp)
+        self.trajectory_data = fh.LoadTrajectoryData(self.trajectory_file, self.avi_data.num_frames)
+
+        # Set the offset values
+        self.x_offset, self.y_offset = t_ops.get_offsets(self.info_file)
+        #endregion
+
+    def draw_map(self):
+        # Save the information for the map, this will be used to change variable values
+        temp_map_img = cv2.imread(self.map_file)
+        self.orig_map_h, self.orig_map_w, _ = temp_map_img.shape  # Can probably sneak this into this class
 
         # Set the x and y map ratios
-        timestamp_ops.set_map_x_y_ratios(self.c1_w, self.map_h)
+        self.map_ratio_x, self.map_ratio_y = t_ops.set_map_x_y_ratios(self.orig_map_w, self. orig_map_h,
+                                                                      self.c1_w, self.map_h)
 
         # Format and resize the map image and then draw it on the map canvas
         map_img = cv2.cvtColor(temp_map_img, cv2.COLOR_BGR2RGB)
@@ -77,33 +143,51 @@ class MainPage:
         new_map = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(resize_map))
         self.map_canvas.create_image(int(c.width * .67) / 2, int(self.map_h) / 2, image=new_map)
 
-        return new_map
+        self.map_image = new_map
+
+    def draw_position(self):
+        # Try to delete the circle before drawing a new one
+        try:
+            self.map_canvas.delete(self.user_position)
+        except:
+            pass
+
+        # Get an x,y coordinate pair based on the timestamp to determine the location to draw the circle
+        x_position, y_position = t_ops.find_xy_in_pixels(self.timestamp, self.map_ratio_x, self.map_ratio_y,
+                                                     self.x_offset, self.y_offset, self.trajectory_data.list_data)
+
+        # Determine the top left and bottom right coordinates for the circle
+        top_x = int(x_position - (.4 / c.m2p))
+        top_y = int(y_position - (.4 / c.m2p))
+        bot_x = int(x_position + (.4 / c.m2p))
+        bot_y = int(y_position + (.4 / c.m2p))
+
+        #print("Bounding box: ", top_x, top_y, "|", bot_x, bot_y)
+
+        user_circle = self.map_canvas.create_oval(top_x, top_y, bot_x, bot_y, fill="orange")
+
+        self.user_position = user_circle
 
     def update_images(self):
-        # Delete the old images
-        fih.delete_images(c.cleanup_directory)
+        # Print out the timestamp - debugging purposes
+        print("timestamp: ", self.timestamp)
 
-        # Create and save the new images - by timestamp
-        fih.save_images(c.timestamp, c.cleanup_directory)
-
-        print("timestamp: ", c.timestamp)
+        self.draw_position()
+        self.update_timestamp_label()
 
         # Load and draw the new images to the gui
-        return self.load_and_draw_images(c.cleanup_directory)
+        self.load_and_draw_images()
 
-    def load_and_draw_images(self, path):
-        # Load the images
-        img1 = cv2.cvtColor(cv2.imread(path + "/image_1.png"), cv2.COLOR_BGR2RGB)
-        img2 = cv2.cvtColor(cv2.imread(path + "/image_2.png"), cv2.COLOR_BGR2RGB)
-        img3 = cv2.cvtColor(cv2.imread(path + "/image_3.png"), cv2.COLOR_BGR2RGB)
+    def update_timestamp_label(self):
+        # Change the time stamp label text
+        self.timestamp_label_text.set("Timestamp: " + str(self.timestamp))
 
-        # Remove anything that may have been on the image canvases
-        #self.img1_canvas.delete(ALL)
-        #self.img2_canvas.delete(ALL)
-        #self.img3_canvas.delete(ALL)
+    def load_and_draw_images(self):
+        # Assign the images based on the timestamp
+        img1, img2, img3 = self.avi_data.get_3_images(self.timestamp)
 
         # Resize the images and draw them on the canvas
-        # Image 1
+        #  Image 1
         resize_img1 = cv2.resize(img1, ((int(c.width * c.c2_width_ratio)), int(c.height * c.img_height_ratio)))
         new_img1 = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(resize_img1))
         self.img1_canvas.create_image(((int(c.width * c.c2_width_ratio) / 2),
@@ -123,48 +207,58 @@ class MainPage:
         self.store_image_2 = new_img2
         self.store_image_3 = new_img3
 
-        return new_img1, new_img2, new_img3
-
     #region ### Mouse and keyboard operations ###
 
     def mouse_click(self, event):
         # Find the timestamp
-        timestamp_ops.find_timestamp(event.x, event.y)
+        temp_timestamp = t_ops.find_timestamp(event.x, event.y,
+                                              self.map_ratio_x, self.map_ratio_y, self.x_offset, self.y_offset,
+                                              self.trajectory_data.list_data)
+        # Only change the timestamp and update the window elements if a valid one is found
+        if temp_timestamp != -1:
+            self.timestamp = temp_timestamp
 
-        # Update the images
-        new_img1, new_img2, new_img3 = self.update_images()
+            # Update the images
+            self.update_images()
 
     def arrow_left(self, event):
         # Update the timestamp
-        c.timestamp = c.timestamp - 1
+        if self.timestamp > 2:
+            self.timestamp = self.timestamp - 2
 
         # Update the images
-        new_img1, new_img2, new_img3 = self.update_images()
+        self.update_images()
 
     def arrow_right(self, event):
         # Update the timestamp
-        c.timestamp = c.timestamp + 1
+        if self.timestamp < self.avi_data.num_frames - 3:
+            self.timestamp = self.timestamp + 2
 
         # Update the images
-        new_img1, new_img2, new_img3 = self.update_images()
+        self.update_images()
 
     def arrow_up(self, event):
         # Update the timestamp
-        c.timestamp = c.timestamp + 10
+        if self.timestamp < self.avi_data.num_frames - 11:
+            self.timestamp = self.timestamp + 10
 
         # Update the images
-        new_img1, new_img2, new_img3 = self.update_images()
+        self.update_images()
 
     def arrow_down(self, event):
         # Update the timestamp
-        c.timestamp = c.timestamp - 10
+        if self.timestamp > 10:
+            self.timestamp = self.timestamp - 10
 
         # Update the images
-        new_img1, new_img2, new_img3 = self.update_images()
+        self.update_images()
 
     #endregion
 
-    def set_key_bindings(self):
+    def quit_program(self):
+        sys.exit()
+
+    def set_bindings(self):
         # Button bindings used to traverse the .avi file via the map
         # Bind the left and right arrow keys to the window to allow the user to go one frame further or one frame back
         self.map_canvas.bind("<Left>", self.arrow_left)
@@ -174,8 +268,10 @@ class MainPage:
         self.map_canvas.bind("<Up>", self.arrow_up)
         self.map_canvas.bind("<Down>", self.arrow_down)
 
-    def set_button_bindings(self):
         # Key bindings used to traverse the .avi file via the map (may add additional functionality later on
         # Bind the mouse click event to the map_canvas, this allows the user to click on the map and get the pixel
         # coordinates of the point clicked
         self.map_canvas.bind("<Button-1>", self.mouse_click)
+
+        # Bind the window close event (x in top right corner)
+        self.app_window.protocol("WM_DELETE_WINDOW", self.quit_program)
