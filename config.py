@@ -1,7 +1,7 @@
 # Configuration File - Used to set and (possibly) store values and variables in the program
 
 #region ### Settings for the window gui ###
-title = "Eagle Eye v0.6.5"
+title = "Eagle Eye v1.0.0"
 width = 1366
 height = 768
 
@@ -17,6 +17,9 @@ top_ly = 10
 #region ### Ratios ###
 # Meter to pixel ratio
 m2p = .05
+
+# Timestamp Pad Amount
+pad_amount = 5
 
 # Container ratios
 map_height_ratio = .9

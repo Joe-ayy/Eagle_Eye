@@ -59,6 +59,7 @@ def find_timestamp(x, y, ratio_x, ratio_y, x_offset, y_offset, trajectory_list):
     # Get the x and y coordinates in meters
     map_x_y_meters = convert_pixel_location([x, y], ratio_x, ratio_y)
 
+    # Debugging purposes
     print("Map x (meters): ", map_x_y_meters[0], "Map y (meters): ", map_x_y_meters[1])
 
     # Subtract the offset to the coordinates
@@ -74,7 +75,7 @@ def find_timestamp(x, y, ratio_x, ratio_y, x_offset, y_offset, trajectory_list):
             timestamp = int(round(float(trajectory_list[i][2]), 0))
             return timestamp
 
-    # Temporary fix, just return 1 as the timestamp
+    # Temporary fix, just return -1 as the timestamp
     return -1
 
 
@@ -122,3 +123,27 @@ def find_xy_in_pixels(timestamp, ratio_x, ratio_y, x_offset, y_offset, trajector
     # Convert the values for the gui pixel values to ints and return them
     #print("gui_map_x: ", int(gui_map_x), "gui_map_y: ", int(gui_map_y))
     return int(gui_map_x), int(gui_map_y)
+
+
+def format_trajectory_data(traj_list_data, avi_length):
+    # Create a padding to add to the beginning of the trajectory list data
+    padding = []
+
+    for i in range(config.pad_amount):
+        padding.append([0, 0, i])
+
+    # Increase the timestamp values of the original trajectory list data by the pad amount
+    for j in range(len(traj_list_data)):
+        traj_list_data[j][2] = traj_list_data[j][2] + config.pad_amount
+
+    # Pad the trajectory data list at the beginning with the pad amount
+    padded_traj_data = padding + traj_list_data
+
+    # Find the ratio of the last timestamp in the trajectory data to the avi file length
+    ts_ratio = avi_length / padded_traj_data[-1][2]
+
+    # Apply the ratio to the data
+    for k in range(len(padded_traj_data)):
+        padded_traj_data[k][2] = padded_traj_data[k][2] * ts_ratio
+
+    return padded_traj_data

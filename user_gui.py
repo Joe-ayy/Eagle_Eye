@@ -5,7 +5,6 @@ import PIL.Image
 import PIL.ImageTk
 import numpy as np
 from gui_builder import *
-from file_handler import *
 import file_handler as fh
 import timestamp_ops as t_ops
 import config as c
@@ -40,6 +39,11 @@ class MainPage:
     # Hold on to the values for the images and objects so they are not garbage collected
     map_image = None
     user_position = None
+    trail_1_position = None
+    trail_2_position = None
+    trail_3_position = None
+    park_position = None
+    dock_position = None
     store_image_1 = None
     store_image_2 = None
     store_image_3 = None
@@ -122,7 +126,14 @@ class MainPage:
         self.avi_data = fh.LoadAviImages(path)
 
         # Create the trajectory file data structure and crimp it to be the same size as the .avi file (by timestamp)
-        self.trajectory_data = fh.LoadTrajectoryData(self.trajectory_file, self.avi_data.num_frames)
+        self.trajectory_data = fh.LoadTrajectoryData(self.trajectory_file)
+
+        # Save unmodified trajectory file to determine park and dock
+        self.orig_trajectory_data = self.trajectory_data.list_data
+
+        # Bound the trajectory data with a predetermined offset to the length of the avi file
+        self.trajectory_data.list_data = t_ops.format_trajectory_data(self.trajectory_data.list_data,
+                                                                      self.avi_data.num_frames)
 
         # Set the offset values
         self.x_offset, self.y_offset = t_ops.get_offsets(self.info_file)
@@ -145,34 +156,83 @@ class MainPage:
 
         self.map_image = new_map
 
-    def draw_position(self):
-        # Try to delete the circle before drawing a new one
-        try:
-            self.map_canvas.delete(self.user_position)
-        except:
-            pass
+        self.draw_p_and_d()
 
+    def draw_p_and_d(self):
+        # Get the park x and y coordinates
+        px_position, py_position = t_ops.find_xy_in_pixels(0, self.map_ratio_x, self.map_ratio_y,
+                                                         self.x_offset, self.y_offset, self.orig_trajectory_data)
+
+        # Get the timestamp for the dock location
+        dock_ts = self.orig_trajectory_data[-1][2]
+
+        # Get the dock x and y coordinates
+        dx_position, dy_position = t_ops.find_xy_in_pixels(dock_ts, self.map_ratio_x, self.map_ratio_y,
+                                                           self.x_offset, self.y_offset, self.orig_trajectory_data)
+
+        # Find the bounds for the circles for the dock and park
+        top_x_p = int(px_position - (.25 / c.m2p))
+        top_y_p = int(py_position - (.25 / c.m2p))
+        bot_x_p = int(px_position + (.25 / c.m2p))
+        bot_y_p = int(py_position + (.25 / c.m2p))
+
+        top_x_d = int(dx_position - (.25 / c.m2p))
+        top_y_d = int(dy_position - (.25 / c.m2p))
+        bot_x_d = int(dx_position + (.25 / c.m2p))
+        bot_y_d = int(dy_position + (.25 / c.m2p))
+
+        # Draw the dock and park circles
+        dock_circle = self.map_canvas.create_oval(top_x_d, top_y_d, bot_x_d, bot_y_d, fill="blue")
+        park_circle = self.map_canvas.create_oval(top_x_p, top_y_p, bot_x_p, bot_y_p, fill="red")
+
+        # Save the dock and park objects from garbage collection
+        self.dock_position = dock_circle
+        self.park_position = park_circle
+
+    def draw_position(self, ts, modifier, color):
         # Get an x,y coordinate pair based on the timestamp to determine the location to draw the circle
-        x_position, y_position = t_ops.find_xy_in_pixels(self.timestamp, self.map_ratio_x, self.map_ratio_y,
+        x_position, y_position = t_ops.find_xy_in_pixels(ts, self.map_ratio_x, self.map_ratio_y,
                                                      self.x_offset, self.y_offset, self.trajectory_data.list_data)
 
         # Determine the top left and bottom right coordinates for the circle
-        top_x = int(x_position - (.4 / c.m2p))
-        top_y = int(y_position - (.4 / c.m2p))
-        bot_x = int(x_position + (.4 / c.m2p))
-        bot_y = int(y_position + (.4 / c.m2p))
+        top_x = int(x_position - (modifier / c.m2p))
+        top_y = int(y_position - (modifier / c.m2p))
+        bot_x = int(x_position + (modifier / c.m2p))
+        bot_y = int(y_position + (modifier / c.m2p))
 
-        #print("Bounding box: ", top_x, top_y, "|", bot_x, bot_y)
+        user_circle = self.map_canvas.create_oval(top_x, top_y, bot_x, bot_y, fill=color)
 
-        user_circle = self.map_canvas.create_oval(top_x, top_y, bot_x, bot_y, fill="orange")
+        return user_circle
 
-        self.user_position = user_circle
+    def draw_trail(self):
+        # Only add a tail to user's current position if he has been at atleast 4 previous positions
+        if self.timestamp > 3:
+            self.trail_3_position = self.draw_position(self.timestamp - 4, .10, "purple")
+            self.trail_2_position = self.draw_position(self.timestamp - 3, .15, "OrangeRed4")
+            self.trail_1_position = self.draw_position(self.timestamp - 2, .25, "OrangeRed")
+
+    def del_old_position(self):
+        # Attempt to delete the user and trail positions
+        try:
+            self.map_canvas.delete(self.user_position)
+            self.map_canvas.delete(self.trail_1_position)
+            self.map_canvas.delete(self.trail_2_position)
+            self.map_canvas.delete(self.trail_3_position)
+        except:
+            return
 
     def update_images(self):
         # Print out the timestamp - debugging purposes
         print("timestamp: ", self.timestamp)
 
-        self.draw_position()
+        # Attempt to delete the old positions
+        self.del_old_position()
+
+        # Draw the user's current position and the trail of previous positions
+        self.draw_trail()
+        self.user_position = self.draw_position(self.timestamp, .4, "orange")
+
+        # Update the timestamp label
         self.update_timestamp_label()
 
         # Load and draw the new images to the gui

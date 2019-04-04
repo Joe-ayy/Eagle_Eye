@@ -67,7 +67,7 @@ class LoadTrajectoryData:
     # Create a list to hold the x, y, and the timestamp
     list_data = []
 
-    def __init__(self, path, num_frames):
+    def __init__(self, path):
         # Open the trajectory file
         file = open(path, 'r')
 
@@ -83,22 +83,19 @@ class LoadTrajectoryData:
             # data_list[0] = float x, data_list[1] = float y, data_list[2] = float z, data_list[3] = float roll
             # data_list[4] = float pitch, data_list[5] = float yaw
             # data_list[6] = float time, data_list[7] = float scm
+            try:
+                x_val = float(data_list[0])
+                y_val = float(data_list[1])
+                timestamp = int(math.floor(float(data_list[6])))
 
-            if int(math.floor(float(data_list[6]))) < num_frames - 1:
-                try:
-                    x_val = float(data_list[0])
-                    y_val = float(data_list[1])
-                    timestamp = int(math.floor(float(data_list[6])))
-                except ValueError:
-                    break
-
-                # Save the data to the list
-                self.list_data.append([x_val, y_val, timestamp])
-
-                # Read in the next line
-                line = file.readline()
-            else:
+            except ValueError:
                 break
+
+            # Save the data to the list
+            self.list_data.append([x_val, y_val, timestamp])
+
+            # Read in the next line
+            line = file.readline()
 
         # Close the file
         file.close()
