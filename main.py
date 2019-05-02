@@ -3,7 +3,10 @@ from tkinter.filedialog import *
 ###
 from user_gui import *
 from file_handler import *
+import sys
 ###
+
+# Build for use with SharpClean
 
 
 def main():
@@ -15,7 +18,8 @@ def main():
     #splash_screen.after(5000, splash_screen.destroy)
 
     # Prompt the user to select the directory that contains all the necessary map editing files
-    cleanup_directory = askdirectory()
+    #cleanup_directory = askdirectory()
+    cleanup_directory = sys.argv[1]
 
     if cleanup_directory != '':
         # Load in the map, info, and trajectory files
