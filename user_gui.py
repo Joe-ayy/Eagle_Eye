@@ -145,7 +145,7 @@ class MainPage:
         self.orig_map_h, self.orig_map_w, _ = temp_map_img.shape  # Can probably sneak this into this class
 
         # Set the x and y map ratios
-        self.map_ratio_x, self.map_ratio_y = t_ops.set_map_x_y_ratios(self.orig_map_w, self. orig_map_h,
+        self.map_ratio_x, self.map_ratio_y = t_ops.set_map_x_y_ratios(self.orig_map_w, self.orig_map_h,
                                                                       self.c1_w, self.map_h)
 
         # Format and resize the map image and then draw it on the map canvas
