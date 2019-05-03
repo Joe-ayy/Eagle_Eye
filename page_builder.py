@@ -23,8 +23,8 @@ class AppPage:
     #endregion
 
     # region ### Initialize values for canvas height and widths ###
-    canvas_dim_store_images = [None, None]  # [width, height]
-    canvas_dim_map_image = [None, None]     # [width, height]
+    canvas_dim_store_images = [0, 0]  # [width, height]
+    canvas_dim_map_image = [0, 0]     # [width, height]
     #endregion
 
     # region ### Create objects to traverse data ###
@@ -145,7 +145,11 @@ class AppPage:
         # Format and resize the map image and draw it on map canvas
         new_map = self.resize_image(self.canvas_dim_map_image[0], self.canvas_dim_map_image[1], temp_map_img)
 
-        self.map_canvas.create_image((0, 0), image=new_map)
+        # Get the mid point of the map canvas to draw the map
+        mid_x = int(self.canvas_dim_map_image[0] / 2)
+        mid_y = int(self.canvas_dim_map_image[1] / 2)
+
+        self.map_canvas.create_image((mid_x, mid_y), image=new_map)
         self.map_image = new_map
 
         self.draw_p_and_d()
@@ -175,7 +179,7 @@ class AppPage:
 
         # Draw the park and dock circles
         dock_circle = self.map_canvas.create_oval(top_x_d, top_y_d, bot_x_d, bot_y_d, fill="blue")
-        park_circle = self.map_canvas.create_oval(top_x_p, top_y_p, bot_y_p, bot_y_p, fill="red")
+        park_circle = self.map_canvas.create_oval(top_x_p, top_y_p, bot_x_p, bot_y_p, fill="red")
 
         # Save the dock and park objects from garbage collection
         self.dock_position = dock_circle
@@ -235,18 +239,22 @@ class AppPage:
         # Assign the images based on the timestamp
         img1, img2, img3 = self.avi_data.get_3_images(self.timestamp)
 
+        # Determine the center of the image canvas
+        mid_x = int(self.canvas_dim_store_images[0] / 2)
+        mid_y = int(self.canvas_dim_store_images[1] / 2)
+
         # Resize the images and draw them on the canvas
         # Image 1
         new_img1 = self.resize_image(self.canvas_dim_store_images[0], self.canvas_dim_store_images[1], img1)
-        self.img1_canvas.create_image((0, 0), image=new_img1)
+        self.img1_canvas.create_image((mid_x, mid_y), image=new_img1)
 
         # Image 2
         new_img2 = self.resize_image(self.canvas_dim_store_images[0], self.canvas_dim_store_images[1], img2)
-        self.img2_canvas.create_image((0, 0), image=new_img2)
+        self.img2_canvas.create_image((mid_x, mid_y), image=new_img2)
 
         # Image 3
         new_img3 = self.resize_image(self.canvas_dim_store_images[0], self.canvas_dim_store_images[1], img3)
-        self.img3_canvas.create_image((0, 0), image=new_img3)
+        self.img3_canvas.create_image((mid_x, mid_y), image=new_img3)
 
         self.store_img1 = new_img1
         self.store_img2 = new_img2
@@ -276,6 +284,10 @@ class AppPage:
         # Update the size of the canvas to the current size based on the resizing window event
         self.canvas_dim_store_images[0] = event.width
         self.canvas_dim_store_images[1] = event.height
+
+        # Redraw all the objects on the screen
+        self.draw_map()
+        self.update_images()
 
     # region ### Mouse, Keyboard, and Window Manipulation Operations ###
     def arrow_left(self, event):
