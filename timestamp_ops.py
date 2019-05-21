@@ -118,7 +118,7 @@ def find_xy_in_pixels(timestamp, ratio_x, ratio_y, x_offset, y_offset, trajector
     gui_map_y = actual_map_y / ratio_y
 
     # Switch the origin from the bottom left to the top right
-    gui_map_y = (config.height * config.map_height_ratio) - gui_map_y
+    gui_map_y = (float(config.height) * float(config.map_height_ratio)) - gui_map_y
 
     # Convert the values for the gui pixel values to ints and return them
     #print("gui_map_x: ", int(gui_map_x), "gui_map_y: ", int(gui_map_y))

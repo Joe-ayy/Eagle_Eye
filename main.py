@@ -1,5 +1,5 @@
 from tkinter.filedialog import *
-
+import sys
 ###
 from user_gui import *
 from file_handler import *
@@ -16,6 +16,7 @@ def main():
 
     # Prompt the user to select the directory that contains all the necessary map editing files
     cleanup_directory = askdirectory()
+    # cleanup_directory = sys.argv[1]
 
     if cleanup_directory != '':
         # Load in the map, info, and trajectory files

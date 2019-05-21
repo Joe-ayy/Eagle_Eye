@@ -1,9 +1,12 @@
 # Configuration File - Used to set and (possibly) store values and variables in the program
 
 #region ### Settings for the window gui ###
-title = "Eagle Eye v1.0.0"
-width = 1366
-height = 768
+title = "Eagle Eye Micro v1.0.0"
+width = 960
+height = 540
+
+print("updated config width: " + str(width))
+print("updated config height: " + str(height))
 
 # Do not allow the window to be resizable right now (may change)
 r_width = False

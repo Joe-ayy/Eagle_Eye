@@ -21,6 +21,9 @@ class MainPage:
     c1_w = c.width * c.c1_width_ratio  # Container 1 width
     c2_w = c.width * c.c2_width_ratio  # Container 2 width
 
+    print("c1 width: " + str(c1_w))
+    print("c2 width: " + str(c2_w))
+
     img_w = c2_w  # Image width
     img_h = c.height * c.img_height_ratio  # Image height
 
@@ -61,6 +64,7 @@ class MainPage:
     map_file = ""
     info_file = ""
     trajectory_file = ""
+    config_file = ""
 
     # Initialize offset values
     x_offset = 0
@@ -77,23 +81,35 @@ class MainPage:
         #region ### Construct all the containers ###
         self.win_con = BuildContainer(self.app_window, c.width, c.height, LEFT, NW)  # Window Container
 
-        self.con1 = BuildContainer(self.win_con, MainPage.c1_w, c.height, LEFT, NW)  #Container 1, left side of window
-        self.con2 = BuildContainer(self.win_con, MainPage.c2_w, c.height, RIGHT, NW)  #Container 2, right side of window
+        c1_w = float(c.width) * float(c.c1_width_ratio)  # Container 1 width
+        c2_w = float(c.width) * float(c.c2_width_ratio)  # Container 2 width
 
-        self.map_con = BuildContainer(self.con1, MainPage.c1_w, MainPage.map_h, TOP, NW)  # Map container
-        self.util_con = BuildContainer(self.con1, MainPage.c1_w, MainPage.util_h, BOTTOM, NW)  # Utility container
+        self.c1_w = c1_w
+        self.c2_w = c2_w
 
-        self.img1_con = BuildContainer(self.con2, MainPage.img_w, MainPage.img_h, TOP, NW)  # Image 1 container
-        self.img2_con = BuildContainer(self.con2, MainPage.img_w, MainPage.img_h, TOP, NW)  # Image 2 container
-        self.img3_con = BuildContainer(self.con2, MainPage.img_w, MainPage.img_h, BOTTOM, NW)  # Image 3 container
+        self.img_w = c2_w  # Image width
+        self.img_h = float(c.height) * float(c.img_height_ratio)  # Image height
+
+        self.map_h = float(c.height) * float(c.map_height_ratio)  # Map height
+        self.util_h = float(c.height) * float(c.util_height_ratio)  # Utility height
+
+        self.con1 = BuildContainer(self.win_con, c1_w, c.height, LEFT, NW)  #Container 1, left side of window
+        self.con2 = BuildContainer(self.win_con, c2_w, c.height, RIGHT, NW)  #Container 2, right side of window
+
+        self.map_con = BuildContainer(self.con1, c1_w, MainPage.map_h, TOP, NW)  # Map container
+        self.util_con = BuildContainer(self.con1, c1_w, MainPage.util_h, BOTTOM, NW)  # Utility container
+
+        self.img1_con = BuildContainer(self.con2, self.img_w, MainPage.img_h, TOP, NW)  # Image 1 container
+        self.img2_con = BuildContainer(self.con2, self.img_w, MainPage.img_h, TOP, NW)  # Image 2 container
+        self.img3_con = BuildContainer(self.con2, self.img_w, MainPage.img_h, BOTTOM, NW)  # Image 3 container
         #endregion
 
         #region ### Construct all the canvases ###
-        self.map_canvas = BuildCanvas(self.map_con, self.c1_w, self.map_h, NW)  # Map Canvas
+        self.map_canvas = BuildCanvas(self.map_con, c1_w, self.map_h, NW)  # Map Canvas
 
-        self.img1_canvas = BuildCanvas(self.img1_con, MainPage.img_w, MainPage.img_h, NW)  # Image 1 Canvas
-        self.img2_canvas = BuildCanvas(self.img2_con, MainPage.img_w, MainPage.img_h, NW)  # Image 2 Canvas
-        self.img3_canvas = BuildCanvas(self.img3_con, MainPage.img_w, MainPage.img_h, NW)  # Image 3 Canvas
+        self.img1_canvas = BuildCanvas(self.img1_con, self.img_w, self.img_h, NW)  # Image 1 Canvas
+        self.img2_canvas = BuildCanvas(self.img2_con, self.img_w, self.img_h, NW)  # Image 2 Canvas
+        self.img3_canvas = BuildCanvas(self.img3_con, self.img_w, self.img_h, NW)  # Image 3 Canvas
         #endregion
 
         # Get the store's name and number - used to display in a label
@@ -121,6 +137,7 @@ class MainPage:
         self.map_file = loaded_file_paths[0]
         self.info_file = loaded_file_paths[1]
         self.trajectory_file = loaded_file_paths[2]
+#        self.config_file = loaded_file_paths[3]
 
         # Create the .avi data structure
         self.avi_data = fh.LoadAviImages(path)
@@ -134,10 +151,9 @@ class MainPage:
         # Bound the trajectory data with a predetermined offset to the length of the avi file
         self.trajectory_data.list_data = t_ops.format_trajectory_data(self.trajectory_data.list_data,
                                                                       self.avi_data.num_frames)
-
         # Set the offset values
         self.x_offset, self.y_offset = t_ops.get_offsets(self.info_file)
-        #endregion
+        # endregion
 
     def draw_map(self):
         # Save the information for the map, this will be used to change variable values
@@ -150,9 +166,9 @@ class MainPage:
 
         # Format and resize the map image and then draw it on the map canvas
         map_img = cv2.cvtColor(temp_map_img, cv2.COLOR_BGR2RGB)
-        resize_map = cv2.resize(map_img, ((int(c.width * .67)), int(self.map_h)))
+        resize_map = cv2.resize(map_img, ((int(float(c.width) * .67)), int(self.map_h)))
         new_map = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(resize_map))
-        self.map_canvas.create_image(int(c.width * .67) / 2, int(self.map_h) / 2, image=new_map)
+        self.map_canvas.create_image(int(float(c.width) * .67) / 2, int(self.map_h) / 2, image=new_map)
 
         self.map_image = new_map
 
@@ -161,7 +177,7 @@ class MainPage:
     def draw_p_and_d(self):
         # Get the park x and y coordinates
         px_position, py_position = t_ops.find_xy_in_pixels(0, self.map_ratio_x, self.map_ratio_y,
-                                                         self.x_offset, self.y_offset, self.orig_trajectory_data)
+                                                           self.x_offset, self.y_offset, self.orig_trajectory_data)
 
         # Get the timestamp for the dock location
         dock_ts = self.orig_trajectory_data[-1][2]
@@ -248,20 +264,23 @@ class MainPage:
 
         # Resize the images and draw them on the canvas
         #  Image 1
-        resize_img1 = cv2.resize(img1, ((int(c.width * c.c2_width_ratio)), int(c.height * c.img_height_ratio)))
+        resize_img1 = cv2.resize(img1, ((int(float(c.width) * float(c.c2_width_ratio))),
+                                        int(float(c.height) * float(c.img_height_ratio))))
         new_img1 = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(resize_img1))
-        self.img1_canvas.create_image(((int(c.width * c.c2_width_ratio) / 2),
-                                                int(c.height * c.img_height_ratio) / 2), image=new_img1)
+        self.img1_canvas.create_image(((int(float(c.width) * float(c.c2_width_ratio)) / 2),
+                                       int(float(c.height) * float(c.img_height_ratio)) / 2), image=new_img1)
         # Image 2
-        resize_img2 = cv2.resize(img2, ((int(c.width * c.c2_width_ratio)), int(c.height * c.img_height_ratio)))
+        resize_img2 = cv2.resize(img2, ((int(float(c.width) * float(c.c2_width_ratio))),
+                                        int(float(c.height) * float(c.img_height_ratio))))
         new_img2 = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(resize_img2))
-        self.img2_canvas.create_image(((int(c.width * c.c2_width_ratio) / 2),
-                                                int(c.height * c.img_height_ratio) / 2), image=new_img2)
+        self.img2_canvas.create_image(((int(float(c.width) * float(c.c2_width_ratio)) / 2),
+                                       int(float(c.height) * float(c.img_height_ratio)) / 2), image=new_img2)
         # Image 3
-        resize_img3 = cv2.resize(img3, ((int(c.width * c.c2_width_ratio)), int(c.height * c.img_height_ratio)))
+        resize_img3 = cv2.resize(img3, ((int(float(c.width) * float(c.c2_width_ratio))),
+                                        int(float(c.height) * float(c.img_height_ratio))))
         new_img3 = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(resize_img3))
-        self.img3_canvas.create_image(((int(c.width * c.c2_width_ratio) / 2),
-                                                int(c.height * c.img_height_ratio) / 2), image=new_img3)
+        self.img3_canvas.create_image(((int(float(c.width) * float(c.c2_width_ratio)) / 2),
+                                       int(float(c.height) * float(c.img_height_ratio)) / 2), image=new_img3)
 
         self.store_image_1 = new_img1
         self.store_image_2 = new_img2

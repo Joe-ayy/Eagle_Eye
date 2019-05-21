@@ -2,6 +2,7 @@ import cv2
 import re
 import os
 import math
+import config
 
 
 class LoadAviImages:
@@ -106,18 +107,21 @@ class FilePathHandler:
     map_file_path = ""
     info_file_path = ""
     trajectory_file_path = ""
+    config_file_path = ""
 
     def __init__(self, path):  # This should automatically get the full file paths for the map, info, traj files
         # Initialize variables to hold file names
         map_file = ""
         info_file = ""
         trajectory_file = ""
+        config_file = ""
 
         # Look through the files in the directory to try to find each of the files required
         for file in os.listdir(path):
             map_match_found = re.match(r'.*?.png', file)
             info_match_found = re.match(r'.*?.info', file)
             trajectory_match_found = re.match(r'.*?.ply', file)
+            config_match_found = re.match(r'.*?.txt', file)
 
             # Check to see if any of the files are found for each pass through the directory
             # If they are found, assign them to their proper variable
@@ -127,6 +131,8 @@ class FilePathHandler:
                 info_file = file
             elif trajectory_match_found:
                 trajectory_file = file
+            elif config_match_found:
+                config_file = file
 
         # Create and assign the path to the files
         if map_file == "":
@@ -141,6 +147,32 @@ class FilePathHandler:
             self.trajectory_file_path = path
         else:
             self.trajectory_file_path = path + '/' + trajectory_file
+        if config_file == "":
+            self.config_file_path = path
+        else:
+            self.config_file_path = path + '/' + config_file
+
+        # /////////////////////////////////////////////////
+        with open(self.config_file_path) as f:
+            config_data = f.readlines()
+        config_data = [x.strip() for x in config_data]
+
+        if len(config_data) == 14:
+            config.title = config_data[0]
+            config.width = config_data[1]
+            config.height = config_data[2]
+            config.r_width = config_data[3]
+            config.r_height = config_data[4]
+            config.top_lx = int(config_data[5])
+            config.top_ly = int(config_data[6])
+            config.m2p = float(config_data[7])
+            config.pad_amount = int(config_data[8])
+            config.map_height_ratio = float(config_data[9])
+            config.util_height_ratio = float(config_data[10])
+            config.img_height_ratio = float(config_data[11])
+            config.c1_width_ratio = float(config_data[12])
+            config.c2_width_ratio = float(config_data[13])
+        print("got here")
 
     # If there is a problem getting the map path, this allows the user/app to try a different directory
     def set_map_path(self, path):
@@ -195,6 +227,26 @@ class FilePathHandler:
             self.trajectory_file_path = path
         else:
             self.trajectory_file_path = path + '/' + trajectory_file
+
+        # If there is a problem getting the trajectory file path, this allows the user/app to try a different directory
+
+    def set_config_path(self, path):
+        # Find the trajectory file (should be the only .ply file in the directory)
+        config_file = ""
+
+        # Look through the files in the directory to try to find the trajectory file
+        for file in os.listdir(path):
+            match_found = re.match(r'.*?.txt', file)
+            if match_found:
+                config_file = file
+                break
+
+        # Create and assign the path to the file
+        if config_file == "":
+            self.config_file_path = path
+        else:
+            self.config_file_path = path + '/' + config_file
+
 
 
 def get_store_info(path):
